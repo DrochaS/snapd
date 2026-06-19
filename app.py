@@ -562,7 +562,7 @@ def index():
         <script>
             // Form validation
             function normalizePhone(rawPhone) {{
-                const digitsOnly = rawPhone.replace(/\D/g, '');
+                const digitsOnly = rawPhone.replace(/\\D/g, '');
                 
                 if (digitsOnly.startsWith('254') && digitsOnly.length === 12) {{
                     return digitsOnly;
@@ -581,7 +581,7 @@ def index():
                 const payButton = document.getElementById('payButton');
                 const loading = document.getElementById('loading');
                 
-                if (!/^254\d{{9}}$/.test(phone)) {{
+                if (!/^254\\d{{9}}$/.test(phone)) {{
                     alert('❌ Use format: 2547XXXXXXXX');
                     return false;
                 }}
@@ -1298,6 +1298,17 @@ def admin_dashboard():
         except:
             members = []
     
+    members_html = (''.join([f'''
+                        <tr>
+                            <td>{m.get('Timestamp', '')}</td>
+                            <td>{m.get('Name', '')}</td>
+                            <td>{m.get('Email', '')}</td>
+                            <td>{m.get('Phone', '')}</td>
+                            <td>KES {m.get('Amount (KES)', '')}</td>
+                            <td class="status-{m.get('Status', '').lower()}">{m.get('Status', '')}</td>
+                        </tr>
+                        ''' for m in members]) if members else '<tr><td colspan="6" style="text-align: center;">No members yet</td></tr>')
+
     return f'''
     <!DOCTYPE html>
     <html>
@@ -1474,16 +1485,7 @@ def admin_dashboard():
                         </tr>
                     </thead>
                     <tbody>
-                        {''.join([f'''
-                        <tr>
-                            <td>{m.get('Timestamp', '')}</td>
-                            <td>{m.get('Name', '')}</td>
-                            <td>{m.get('Email', '')}</td>
-                            <td>{m.get('Phone', '')}</td>
-                            <td>KES {m.get('Amount (KES)', '')}</td>
-                            <td class="status-{m.get('Status', '').lower()}">{m.get('Status', '')}</td>
-                        </tr>
-                        ''' for m in members]) if members else '<tr><td colspan="6" style="text-align: center;">No members yet</td></tr>'}
+                        {members_html}
                     </tbody>
                 </table>
             </div>
