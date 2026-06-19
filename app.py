@@ -562,7 +562,7 @@ def index():
         <script>
             // Form validation
             function normalizePhone(rawPhone) {{
-                const digitsOnly = rawPhone.replace(/\D/g, '');
+                const digitsOnly = rawPhone.replace(/\\D/g, '');
                 
                 if (digitsOnly.startsWith('254') && digitsOnly.length === 12) {{
                     return digitsOnly;
@@ -581,7 +581,7 @@ def index():
                 const payButton = document.getElementById('payButton');
                 const loading = document.getElementById('loading');
                 
-                if (!/^254\d{{9}}$/.test(phone)) {{
+                if (!/^254\\d{{9}}$/.test(phone)) {{
                     alert('❌ Use format: 2547XXXXXXXX');
                     return false;
                 }}
