@@ -1,0 +1,37 @@
+# Secrets - NEVER commit these!
+.env
+*.json
+gym-credentials.json
+secrets.py
+config.py
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite3
+
+# Keep important files
+!requirements.txt
+!README.md
