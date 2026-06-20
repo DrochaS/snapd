@@ -20,8 +20,8 @@ from dotenv import load_dotenv
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# Load environment variables with ABSOLUTE PATH
-ENV_PATH = '/home/drocha/gym-website/.env'
+# Load environment variables
+ENV_PATH = '.env'
 load_dotenv(ENV_PATH)
 print(f"Loading .env from: {ENV_PATH}", file=sys.stderr)
 print(f"File exists: {os.path.exists(ENV_PATH)}", file=sys.stderr)
@@ -96,7 +96,7 @@ def setup_google_sheets():
         ]
 
         # Use ABSOLUTE path to the file
-        credentials_path = '/home/drocha/gym-website/gym-credentials.json'
+        credentials_path = 'gym-credentials.json'
 
         if not os.path.exists(credentials_path):
             logger.warning("⚠️  gym-credentials.json not found at %s", credentials_path)
