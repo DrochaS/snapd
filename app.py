@@ -75,7 +75,7 @@ except Exception as e:
     service = None
 
 # Program details - Read from .env
-PROGRAM_FEE = int(os.getenv('PROGRAM_FEE', 1500))
+PROGRAM_FEE = int(os.getenv('PROGRAM_FEE', '1500'))
 PROGRAM_NAME = os.getenv('PROGRAM_NAME', 'The Tkay Challenge')
 PROGRAM_LINK = os.getenv('PROGRAM_LINK', 'https://chat.whatsapp.com/CsNACCVEIyOHgglAxmW9XN')
 CURRENCY = os.getenv('CURRENCY', 'KES')
@@ -94,40 +94,40 @@ def setup_google_sheets():
             "https://spreadsheets.google.com/feeds",
             "https://www.googleapis.com/auth/drive"
         ]
-        
+
         # Use ABSOLUTE path to the file
         credentials_path = '/home/drocha/gym-website/gym-credentials.json'
-        
+
         if not os.path.exists(credentials_path):
             logger.warning(f"⚠️  gym-credentials.json not found at {credentials_path}")
             logger.warning(f"Current directory: {os.getcwd()}")
             logger.warning("Google Sheets will be disabled")
             return None
-        
+
         creds = ServiceAccountCredentials.from_json_keyfile_name(
             credentials_path, scope
         )
         client = gspread.authorize(creds)
-        
+
         sheet_name = os.getenv('GOOGLE_SHEET_NAME', 'Tkay Challenge Members')
         sheet = client.open(sheet_name).sheet1
-        
+
         # Check if headers exist
         headers = sheet.row_values(1)
         expected_headers = [
             'Timestamp', 'Name', 'Age', 'Height (cm)', 'Weight (kg)',
-            'Email', 'Phone', 'Amount (KES)', 'Registration ID', 
+            'Email', 'Phone', 'Amount (KES)', 'Registration ID',
             'Invoice ID', 'Status', 'Program'
         ]
-        
+
         if not headers or headers[0] != 'Timestamp':
             sheet.clear()
             sheet.append_row(expected_headers)
             logger.info("✅ Added headers to Google Sheet")
-        
+
         logger.info(f"✅ Connected to Google Sheet: {sheet_name}")
         return sheet
-        
+
     except Exception as e:
         logger.error(f"❌ Google Sheets error: {e}")
         return None
@@ -139,7 +139,7 @@ def save_member_to_sheets(member_data, invoice_id, status):
     try:
         if not google_sheet:
             return False
-        
+
         row = [
             datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             member_data.get('name', ''),
@@ -154,11 +154,11 @@ def save_member_to_sheets(member_data, invoice_id, status):
             status,
             PROGRAM_NAME
         ]
-        
+
         google_sheet.append_row(row)
         logger.info(f"✅ Member saved: {member_data.get('email')}")
         return True
-        
+
     except Exception as e:
         logger.error(f"❌ Sheets save error: {e}")
         return False
@@ -182,7 +182,7 @@ def inject_disable_f12():
             e.preventDefault();
             return false;
         });
-        
+
         // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
         document.addEventListener('keydown', function(e) {
             // F12
@@ -190,35 +190,35 @@ def inject_disable_f12():
                 e.preventDefault();
                 return false;
             }
-            
+
             // Ctrl+Shift+I (Windows)
             if (e.ctrlKey && e.shiftKey && e.key === 'I') {
                 e.preventDefault();
                 return false;
             }
-            
+
             // Ctrl+Shift+J (Windows)
             if (e.ctrlKey && e.shiftKey && e.key === 'J') {
                 e.preventDefault();
                 return false;
             }
-            
+
             // Ctrl+U (View Source)
             if (e.ctrlKey && e.key === 'u') {
                 e.preventDefault();
                 return false;
             }
-            
+
             // Ctrl+Shift+C (Inspect)
             if (e.ctrlKey && e.shiftKey && e.key === 'C') {
                 e.preventDefault();
                 return false;
             }
         });
-        
+
         // Detect DevTools opening (optional, not 100% reliable)
         setInterval(function() {
-            if (window.outerHeight - window.innerHeight > 200 || 
+            if (window.outerHeight - window.innerHeight > 200 ||
                 window.outerWidth - window.innerWidth > 200) {
                 // DevTools might be open - optional action
                 console.clear();
@@ -245,7 +245,7 @@ def admin_required(f):
 def index():
     """Homepage with registration form - Mobile & Desktop Responsive"""
     disable_f12 = inject_disable_f12()
-    
+
     return f'''
     <!DOCTYPE html>
     <html lang="en">
@@ -261,7 +261,7 @@ def index():
                 box-sizing: border-box;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             }}
-            
+
             body {{
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 min-height: 100vh;
@@ -270,7 +270,7 @@ def index():
                 align-items: center;
                 padding: 15px;
             }}
-            
+
             .container {{
                 width: 100%;
                 max-width: 500px;
@@ -280,65 +280,65 @@ def index():
                 box-shadow: 0 20px 60px rgba(0,0,0,0.3);
                 animation: slideUp 0.5s ease;
             }}
-            
+
             @keyframes slideUp {{
                 from {{ opacity: 0; transform: translateY(20px); }}
                 to {{ opacity: 1; transform: translateY(0); }}
             }}
-            
+
             /* Desktop styles (max-width > 768px) */
             @media (min-width: 769px) {{
                 .container {{
                     padding: 40px;
                 }}
-                
+
                 h1 {{
                     font-size: 32px !important;
                 }}
-                
+
                 .price-tag {{
                     padding: 25px !important;
                 }}
-                
+
                 .price {{
                     font-size: 48px !important;
                 }}
             }}
-            
+
             /* Mobile styles (max-width 768px) */
             @media (max-width: 768px) {{
                 .container {{
                     padding: 20px 15px;
                     border-radius: 20px;
                 }}
-                
+
                 h1 {{
                     font-size: 24px !important;
                 }}
-                
+
                 .price-tag {{
                     padding: 15px !important;
                 }}
-                
+
                 .price {{
                     font-size: 36px !important;
                 }}
-                
+
                 input {{
                     padding: 12px !important;
                     font-size: 16px !important;
                 }}
-                
+
                 button {{
                     padding: 16px !important;
                     font-size: 18px !important;
                 }}
-                
+
                 .info-box {{
                     padding: 15px !important;
                 }}
             }}
-            
+
             h1 {{
                 color: #333;
                 text-align: center;
@@ -346,7 +346,7 @@ def index():
                 font-size: 28px;
                 font-weight: 700;
             }}
-            
+
             .price-tag {{
                 background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
                 color: white;
@@ -356,25 +356,25 @@ def index():
                 margin: 20px 0;
                 box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
             }}
-            
+
             .price {{
                 font-size: 42px;
                 font-weight: 800;
                 display: block;
                 line-height: 1.2;
             }}
-            
+
             .currency {{
                 font-size: 18px;
                 opacity: 0.9;
                 display: block;
                 margin-bottom: 5px;
             }}
-            
+
             .form-group {{
                 margin-bottom: 20px;
             }}
-            
+
             label {{
                 display: block;
                 margin-bottom: 8px;
@@ -382,7 +382,7 @@ def index():
                 color: #555;
                 font-size: 14px;
             }}
-            
+
             input {{
                 width: 100%;
                 padding: 14px 16px;
@@ -392,14 +392,14 @@ def index():
                 transition: all 0.3s;
                 background: #f8f9fa;
             }}
-            
+
             input:focus {{
                 border-color: #4CAF50;
                 outline: none;
                 background: white;
                 box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.1);
             }}
-            
+
             button {{
                 width: 100%;
                 padding: 16px;
@@ -414,16 +414,16 @@ def index():
                 margin-top: 20px;
                 box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
             }}
-            
+
             button:hover {{
                 transform: translateY(-2px);
                 box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
             }}
-            
+
             button:active {{
                 transform: translateY(0);
             }}
-            
+
             .info-box {{
                 background: #f8f9fa;
                 padding: 20px;
@@ -432,7 +432,7 @@ def index():
                 font-size: 14px;
                 border: 1px solid #e0e0e0;
             }}
-            
+
             .info-box p {{
                 margin: 8px 0;
                 display: flex;
@@ -440,40 +440,40 @@ def index():
                 gap: 10px;
                 color: #555;
             }}
-            
+
             .phone-hint {{
                 color: #666;
                 font-size: 12px;
                 margin-top: 5px;
                 padding-left: 5px;
             }}
-            
+
             .admin-link {{
                 text-align: center;
                 margin-top: 20px;
                 font-size: 12px;
             }}
-            
+
             .admin-link a {{
                 color: #999;
                 text-decoration: none;
             }}
-            
+
             .admin-link a:hover {{
                 color: #4CAF50;
             }}
-            
+
             /* Loading animation */
             .loading {{
                 display: none;
                 text-align: center;
                 margin-top: 10px;
             }}
-            
+
             .loading.active {{
                 display: block;
             }}
-            
+
             .spinner {{
                 border: 3px solid #f3f3f3;
                 border-top: 3px solid #4CAF50;
@@ -483,7 +483,7 @@ def index():
                 animation: spin 1s linear infinite;
                 margin: 10px auto;
             }}
-            
+
             @keyframes spin {{
                 0% {{ transform: rotate(0deg); }}
                 100% {{ transform: rotate(360deg); }}
@@ -493,38 +493,38 @@ def index():
     <body>
         <div class="container">
             <h1>🏋️ {PROGRAM_NAME}</h1>
-            
+
             <div class="price-tag">
                 <span class="currency">{CURRENCY}</span>
                 <span class="price" id="programFee">{PROGRAM_FEE:,}</span>
             </div>
-            
+
             <form action="/register" method="POST" id="registrationForm" onsubmit="return validateForm()">
                 <div class="form-group">
                     <label>📝 Full Name</label>
                     <input type="text" name="name" required placeholder="John Doe">
                 </div>
-                
+
                 <div class="form-group">
                     <label>🎂 Age</label>
                     <input type="number" name="age" required min="18" max="100" placeholder="25">
                 </div>
-                
+
                 <div class="form-group">
                     <label>📏 Height (cm)</label>
                     <input type="number" name="height" required min="100" max="250" step="0.1" placeholder="175">
                 </div>
-                
+
                 <div class="form-group">
                     <label>⚖️ Weight (kg)</label>
                     <input type="number" name="weight" required min="30" max="200" step="0.1" placeholder="70">
                 </div>
-                
+
                 <div class="form-group">
                     <label>📧 Email</label>
                     <input type="email" name="email" required placeholder="john@example.com">
                 </div>
-                
+
                 <div class="form-group">
                     <label>📱 M-Pesa Number</label>
                     <input type="text" name="phone" required
@@ -536,81 +536,81 @@ def index():
                            id="phone">
                     <div class="phone-hint">Use only the 254 format (example: 254712345678)</div>
                 </div>
-                
+
                 <button type="submit" id="payButton">
                     Pay {CURRENCY} <span id="buttonAmount">{PROGRAM_FEE:,}</span> via M-Pesa
                 </button>
-                
+
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
                     <p>Processing... Please check your phone</p>
                 </div>
             </form>
-            
+
             <div class="info-box">
                 <p>✅ <strong>Secure Payment</strong> via IntaSend</p>
                 <p>📱 <strong>M-Pesa STK Push</strong> sent to your phone</p>
                 <p>⚡ <strong>Instant Access</strong> after payment</p>
                 <p>🔒 <strong>256-bit SSL</strong> encrypted</p>
             </div>
-            
+
             <div class="admin-link">
                 <a href="/admin">⚙️ Admin Area</a>
             </div>
         </div>
-        
+
         <script>
             // Form validation
             function normalizePhone(rawPhone) {{
                 const digitsOnly = rawPhone.replace(/\\D/g, '');
-                
+
                 if (digitsOnly.startsWith('254') && digitsOnly.length === 12) {{
                     return digitsOnly;
                 }}
-                
+
                 if (digitsOnly.startsWith('0') && digitsOnly.length === 10) {{
                     return '254' + digitsOnly.slice(1);
                 }}
-                
+
                 return digitsOnly;
             }}
-            
+
             function validateForm() {{
                 const rawPhone = document.getElementById('phone').value;
                 const phone = normalizePhone(rawPhone);
                 const payButton = document.getElementById('payButton');
                 const loading = document.getElementById('loading');
-                
+
                 if (!/^254\\d{{9}}$/.test(phone)) {{
                     alert('❌ Use format: 2547XXXXXXXX');
                     return false;
                 }}
-                
+
                 document.getElementById('phone').value = phone;
-                
+
                 // Show loading
                 payButton.style.display = 'none';
                 loading.classList.add('active');
-                
+
                 return true;
             }}
-            
+
             // Disable text selection
             document.onselectstart = function() {{ return false; }};
-            
+
             // Disable copy
             document.oncopy = function() {{ return false; }};
-            
+
             // Check if mobile
             function isMobile() {{
                 return window.innerWidth <= 768;
             }}
-            
+
             // Adjust for mobile
             if (isMobile()) {{
                 document.body.style.padding = '10px';
             }}
-            
+
             // Prevent zoom on input focus (mobile)
             document.querySelectorAll('input').forEach(input => {{
                 input.addEventListener('focus', function() {{
@@ -629,13 +629,13 @@ def index():
 @app.route('/register', methods=['POST'])
 def register():
     """Handle registration and initiate IntaSend STK Push"""
-    
+
     try:
         registration_id = str(uuid.uuid4())[:8].upper()
-        
+
         raw_phone = request.form.get('phone', '')
         normalized_phone = normalize_phone(raw_phone)
-        
+
         member = {
             'name': request.form['name'].strip(),
             'age': int(request.form['age']),
@@ -647,21 +647,21 @@ def register():
             'registration_id': registration_id,
             'timestamp': datetime.now().isoformat()
         }
-        
+
         # Validate phone
         if not re.fullmatch(r'254\d{9}', member['phone']):
             return "Invalid phone number. Use format: 2547XXXXXXXX"
-        
+
         # Save to session
         session['member'] = member
         session['registration_id'] = registration_id
-        
+
         if not service:
             logger.error("Payment service unavailable")
             return "Payment service unavailable. Please try again later."
-        
+
         logger.info(f"Initiating payment for {member['phone']}")
-        
+
         # IntaSend STK Push
         response = service.collect.mpesa_stk_push(
             phone_number=member['phone'],
@@ -669,9 +669,9 @@ def register():
             amount=member['amount'],
             narrative=f"{PROGRAM_NAME} - {member['name']}"
         )
-        
+
         logger.info(f"IntaSend response: {response}")
-        
+
         # Extract invoice ID from response
         invoice_id = None
         if response and isinstance(response, dict):
@@ -681,20 +681,20 @@ def register():
                 invoice_id = response.get('id')
             elif response.get('invoice_id'):
                 invoice_id = response.get('invoice_id')
-        
+
         if invoice_id:
             session['invoice_id'] = invoice_id
             logger.info(f"✅ Invoice ID: {invoice_id}")
-            
+
             # Save to Google Sheets - PENDING
             save_member_to_sheets(member, invoice_id, 'PENDING')
-            
+
             # Redirect to processing page with invoice_id in URL
             return redirect(url_for('payment_processing', invoice_id=invoice_id))
         else:
             logger.error(f"Could not extract invoice_id from response: {response}")
             return "Payment initiated but couldn't get invoice ID. Check IntaSend dashboard."
-                
+
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
         traceback.print_exc()
@@ -705,7 +705,7 @@ def payment_processing(invoice_id):
     """Show payment processing page with auto-refresh"""
     disable_f12 = inject_disable_f12()
     member = session.get('member', {})
-    
+
     return f'''
     <!DOCTYPE html>
     <html>
@@ -720,7 +720,7 @@ def payment_processing(invoice_id):
                 padding: 0;
                 box-sizing: border-box;
             }}
-            
+
             body {{
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 min-height: 100vh;
@@ -729,7 +729,7 @@ def payment_processing(invoice_id):
                 align-items: center;
                 padding: 20px;
             }}
-            
+
             .container {{
                 max-width: 450px;
                 width: 100%;
@@ -740,13 +740,13 @@ def payment_processing(invoice_id):
                 box-shadow: 0 20px 60px rgba(0,0,0,0.3);
                 animation: pulse 2s infinite;
             }}
-            
+
             @keyframes pulse {{
                 0% {{ transform: scale(1); }}
                 50% {{ transform: scale(1.02); }}
                 100% {{ transform: scale(1); }}
             }}
-            
+
             .spinner {{
                 border: 5px solid #f3f3f3;
                 border-top: 5px solid #4CAF50;
@@ -756,17 +756,17 @@ def payment_processing(invoice_id):
                 animation: spin 1s linear infinite;
                 margin: 20px auto;
             }}
-            
+
             @keyframes spin {{
                 0% {{ transform: rotate(0deg); }}
                 100% {{ transform: rotate(360deg); }}
             }}
-            
+
             h2 {{
                 color: #333;
                 margin-bottom: 20px;
             }}
-            
+
             .details {{
                 background: #f8f9fa;
                 padding: 20px;
@@ -774,7 +774,7 @@ def payment_processing(invoice_id):
                 margin: 20px 0;
                 text-align: left;
             }}
-            
+
             .detail-row {{
                 display: flex;
                 justify-content: space-between;
@@ -782,11 +782,11 @@ def payment_processing(invoice_id):
                 padding: 8px 0;
                 border-bottom: 1px solid #e0e0e0;
             }}
-            
+
             .detail-row:last-child {{
                 border-bottom: none;
             }}
-            
+
             .steps {{
                 background: #e8f5e9;
                 padding: 20px;
@@ -794,28 +794,28 @@ def payment_processing(invoice_id):
                 margin: 20px 0;
                 text-align: left;
             }}
-            
+
             .steps h3 {{
                 color: #2e7d32;
                 margin-bottom: 10px;
             }}
-            
+
             .steps ol {{
                 padding-left: 20px;
             }}
-            
+
             .steps li {{
                 margin: 8px 0;
                 color: #1e5e24;
             }}
-            
+
             .manual-check {{
                 margin-top: 20px;
                 padding: 15px;
                 background: #fff3cd;
                 border-radius: 10px;
             }}
-            
+
             .manual-check button {{
                 background: #ffc107;
                 color: #333;
@@ -826,16 +826,16 @@ def payment_processing(invoice_id):
                 cursor: pointer;
                 margin-top: 10px;
             }}
-            
+
             .manual-check button:hover {{
                 background: #e0a800;
             }}
-            
+
             @media (max-width: 768px) {{
                 .container {{
                     padding: 20px;
                 }}
-                
+
                 .detail-row {{
                     flex-direction: column;
                     gap: 5px;
@@ -846,10 +846,10 @@ def payment_processing(invoice_id):
     <body>
         <div class="container">
             <div class="spinner"></div>
-            
+
             <h2>⏳ Processing Your Payment</h2>
             <p style="color: #4CAF50; font-weight: bold;">Please check your phone for M-Pesa prompt</p>
-            
+
             <div class="details">
                 <div class="detail-row">
                     <strong>Name:</strong>
@@ -872,7 +872,7 @@ def payment_processing(invoice_id):
                     <span>{invoice_id}</span>
                 </div>
             </div>
-            
+
             <div class="steps">
                 <h3>📱 Next Steps:</h3>
                 <ol>
@@ -882,9 +882,9 @@ def payment_processing(invoice_id):
                     <li>You'll be redirected automatically</li>
                 </ol>
             </div>
-            
+
             <p style="color: #666; margin-top: 20px;">This page refreshes every 5 seconds to check payment status...</p>
-            
+
             <div class="manual-check">
                 <p><strong>Already paid but still stuck?</strong></p>
                 <button onclick="window.location.href='/check-status/{invoice_id}'">
@@ -899,40 +899,40 @@ def payment_processing(invoice_id):
 @app.route('/check-status/<invoice_id>')
 def check_status(invoice_id):
     """Check payment status via IntaSend"""
-    
+
     if not invoice_id:
         logger.error("No invoice_id provided")
         return redirect('/')
-    
+
     try:
         logger.info(f"Checking status for invoice: {invoice_id}")
-        
+
         # Get payment status from IntaSend
         status = service.collect.status(invoice_id=invoice_id)
         logger.info(f"Status check response: {status}")
-        
+
         # Check different possible status fields
         payment_state = None
         if isinstance(status, dict):
             payment_state = status.get('state') or status.get('status') or status.get('invoice', {}).get('state')
-        
+
         logger.info(f"Payment state: {payment_state}")
-        
+
         # If payment is complete
         if payment_state == 'COMPLETE' or payment_state == 'completed' or payment_state == 'success':
             member = session.get('member', {})
-            
+
             # Update Google Sheets
             save_member_to_sheets(member, invoice_id, 'COMPLETE')
-            
+
             # Clear session data
             session.pop('member', None)
             session.pop('invoice_id', None)
             session.pop('registration_id', None)
-            
+
             logger.info(f"✅ Payment complete for invoice {invoice_id}")
             return redirect(url_for('success'))
-        
+
         # If payment failed
         elif payment_state == 'FAILED' or payment_state == 'failed':
             logger.warning(f"❌ Payment failed for invoice {invoice_id}")
@@ -943,12 +943,12 @@ def check_status(invoice_id):
                 <a href="/" style="color: #4CAF50;">Back to Home</a>
             </div>
             '''
-        
+
         # Still pending - redirect back to processing page
         else:
             logger.info(f"⏳ Payment still pending for invoice {invoice_id}")
             return redirect(url_for('payment_processing', invoice_id=invoice_id))
-            
+
     except Exception as e:
         logger.error(f"Status check error: {e}")
         traceback.print_exc()
@@ -959,7 +959,7 @@ def check_status(invoice_id):
 def success():
     """Success page with program link"""
     disable_f12 = inject_disable_f12()
-    
+
     return f'''
     <!DOCTYPE html>
     <html>
@@ -974,7 +974,7 @@ def success():
                 padding: 0;
                 box-sizing: border-box;
             }}
-            
+
             body {{
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 min-height: 100vh;
@@ -983,7 +983,7 @@ def success():
                 align-items: center;
                 padding: 20px;
             }}
-            
+
             .container {{
                 max-width: 500px;
                 width: 100%;
@@ -994,30 +994,30 @@ def success():
                 box-shadow: 0 20px 60px rgba(0,0,0,0.3);
                 animation: slideUp 0.5s ease;
             }}
-            
+
             @keyframes slideUp {{
                 from {{ opacity: 0; transform: translateY(20px); }}
                 to {{ opacity: 1; transform: translateY(0); }}
             }}
-            
+
             .success-icon {{
                 font-size: 80px;
                 margin-bottom: 20px;
             }}
-            
+
             h1 {{
                 color: #4CAF50;
                 margin-bottom: 15px;
                 font-size: 2.5em;
             }}
-            
+
             .welcome-message {{
                 font-size: 20px;
                 color: #333;
                 margin-bottom: 20px;
                 line-height: 1.6;
             }}
-            
+
             .program-button {{
                 display: inline-block;
                 background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
@@ -1032,12 +1032,12 @@ def success():
                 transition: all 0.3s;
                 word-break: break-all;
             }}
-            
+
             .program-button:hover {{
                 transform: translateY(-2px);
                 box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
             }}
-            
+
             .info {{
                 background: #f8f9fa;
                 padding: 20px;
@@ -1045,22 +1045,22 @@ def success():
                 margin-top: 20px;
                 text-align: left;
             }}
-            
+
             .info h3 {{
                 color: #333;
                 margin-bottom: 10px;
             }}
-            
+
             .info ul {{
                 padding-left: 20px;
                 margin: 10px 0;
             }}
-            
+
             .info li {{
                 margin: 8px 0;
                 color: #555;
             }}
-            
+
             .countdown {{
                 margin-top: 20px;
                 padding: 10px;
@@ -1068,26 +1068,26 @@ def success():
                 border-radius: 10px;
                 color: #1976d2;
             }}
-            
+
             .manual-redirect {{
                 margin-top: 15px;
             }}
-            
+
             .manual-redirect a {{
                 color: #4CAF50;
                 text-decoration: none;
                 font-weight: bold;
             }}
-            
+
             @media (max-width: 768px) {{
                 .container {{
                     padding: 30px 20px;
                 }}
-                
+
                 h1 {{
                     font-size: 28px;
                 }}
-                
+
                 .program-button {{
                     font-size: 16px;
                     padding: 14px 25px;
@@ -1098,21 +1098,21 @@ def success():
     <body>
         <div class="container">
             <div class="success-icon">✅</div>
-            
+
             <h1>Payment Successful!</h1>
-            
+
             <div class="welcome-message">
                 🎉 Welcome to {PROGRAM_NAME}! 🎉
             </div>
-            
+
             <p style="font-size: 18px; margin-bottom: 20px;">
                 Your payment has been processed successfully.
             </p>
-            
+
             <a href="{PROGRAM_LINK}" target="_blank" class="program-button">
                 👥 Join WhatsApp Group Now
             </a>
-            
+
             <div class="info">
                 <h3>📋 What's Next:</h3>
                 <ul>
@@ -1123,15 +1123,15 @@ def success():
                     <li>💪 Start your Tkay Challenge journey!</li>
                 </ul>
             </div>
-            
+
             <div class="countdown">
                 ⏰ You'll be automatically redirected to WhatsApp in 5 seconds...
             </div>
-            
+
             <div class="manual-redirect">
                 <p>Not working? <a href="{PROGRAM_LINK}" target="_blank">Click here to join now</a></p>
             </div>
-            
+
             <p style="color: #666; margin-top: 20px;">
                 📧 Check your email for payment receipt and program details
             </p>
@@ -1145,17 +1145,17 @@ def admin_login():
     """Admin login page"""
     disable_f12 = inject_disable_f12()
     error = ''
-    
+
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
+
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['admin_logged_in'] = True
             return redirect(url_for('admin_dashboard'))
         else:
             error = 'Invalid credentials'
-    
+
     return f'''
     <!DOCTYPE html>
     <html>
@@ -1169,7 +1169,7 @@ def admin_login():
                 padding: 0;
                 box-sizing: border-box;
             }}
-            
+
             body {{
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 min-height: 100vh;
@@ -1178,7 +1178,7 @@ def admin_login():
                 align-items: center;
                 padding: 20px;
             }}
-            
+
             .container {{
                 max-width: 400px;
                 width: 100%;
@@ -1187,24 +1187,24 @@ def admin_login():
                 padding: 30px;
                 box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             }}
-            
+
             h2 {{
                 color: #333;
                 margin-bottom: 20px;
                 text-align: center;
             }}
-            
+
             .form-group {{
                 margin-bottom: 20px;
             }}
-            
+
             label {{
                 display: block;
                 margin-bottom: 5px;
                 font-weight: 600;
                 color: #555;
             }}
-            
+
             input {{
                 width: 100%;
                 padding: 12px;
@@ -1212,12 +1212,12 @@ def admin_login():
                 border-radius: 8px;
                 font-size: 16px;
             }}
-            
+
             input:focus {{
                 border-color: #4CAF50;
                 outline: none;
             }}
-            
+
             button {{
                 width: 100%;
                 padding: 12px;
@@ -1229,22 +1229,22 @@ def admin_login():
                 font-weight: bold;
                 cursor: pointer;
             }}
-            
+
             button:hover {{
                 background: #45a049;
             }}
-            
+
             .error {{
                 color: #f44336;
                 text-align: center;
                 margin-bottom: 15px;
             }}
-            
+
             .back-link {{
                 text-align: center;
                 margin-top: 20px;
             }}
-            
+
             .back-link a {{
                 color: #666;
                 text-decoration: none;
@@ -1254,23 +1254,23 @@ def admin_login():
     <body>
         <div class="container">
             <h2>🔐 Admin Login</h2>
-            
+
             {f'<div class="error">{error}</div>' if error else ''}
-            
+
             <form method="POST">
                 <div class="form-group">
                     <label>Username</label>
                     <input type="text" name="username" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Password</label>
                     <input type="password" name="password" required>
                 </div>
-                
+
                 <button type="submit">Login</button>
             </form>
-            
+
             <div class="back-link">
                 <a href="/">← Back to Home</a>
             </div>
@@ -1284,10 +1284,10 @@ def admin_login():
 def admin_dashboard():
     """Admin dashboard to view logs"""
     disable_f12 = inject_disable_f12()
-    
+
     # Get current fee
     current_fee = PROGRAM_FEE
-    
+
     # Get recent members from Google Sheets
     members = []
     if google_sheet:
@@ -1297,7 +1297,7 @@ def admin_dashboard():
             members.reverse()  # Newest first
         except:
             members = []
-    
+
     members_html = (''.join([f'''
                         <tr>
                             <td>{m.get('Timestamp', '')}</td>
@@ -1322,18 +1322,18 @@ def admin_dashboard():
                 padding: 0;
                 box-sizing: border-box;
             }}
-            
+
             body {{
                 background: #f5f5f5;
                 min-height: 100vh;
                 padding: 20px;
             }}
-            
+
             .container {{
                 max-width: 1200px;
                 margin: 0 auto;
             }}
-            
+
             .header {{
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
@@ -1345,11 +1345,11 @@ def admin_dashboard():
                 align-items: center;
                 flex-wrap: wrap;
             }}
-            
+
             .header h1 {{
                 font-size: 24px;
             }}
-            
+
             .logout {{
                 background: rgba(255,255,255,0.2);
                 color: white;
@@ -1357,7 +1357,7 @@ def admin_dashboard():
                 padding: 8px 16px;
                 border-radius: 5px;
             }}
-            
+
             .price-card {{
                 background: white;
                 padding: 20px;
@@ -1365,12 +1365,12 @@ def admin_dashboard():
                 margin-bottom: 20px;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             }}
-            
+
             .price-card h2 {{
                 color: #333;
                 margin-bottom: 15px;
             }}
-            
+
             .current-price {{
                 font-size: 36px;
                 font-weight: bold;
@@ -1381,7 +1381,7 @@ def admin_dashboard():
                 border-radius: 10px;
                 text-align: center;
             }}
-            
+
             .note {{
                 color: #666;
                 font-style: italic;
@@ -1390,7 +1390,7 @@ def admin_dashboard():
                 background: #fff3cd;
                 border-left: 4px solid #ffc107;
             }}
-            
+
             .members-section {{
                 background: white;
                 padding: 20px;
@@ -1398,49 +1398,49 @@ def admin_dashboard():
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 overflow-x: auto;
             }}
-            
+
             .members-section h2 {{
                 color: #333;
                 margin-bottom: 20px;
             }}
-            
+
             table {{
                 width: 100%;
                 border-collapse: collapse;
                 min-width: 800px;
             }}
-            
+
             th {{
                 background: #4CAF50;
                 color: white;
                 padding: 12px;
                 text-align: left;
             }}
-            
+
             td {{
                 padding: 10px;
                 border-bottom: 1px solid #ddd;
             }}
-            
+
             tr:hover {{
                 background: #f5f5f5;
             }}
-            
+
             .status-complete {{
                 color: #4CAF50;
                 font-weight: bold;
             }}
-            
+
             .status-pending {{
                 color: #ff9800;
                 font-weight: bold;
             }}
-            
+
             .status-failed {{
                 color: #f44336;
                 font-weight: bold;
             }}
-            
+
             @media (max-width: 768px) {{
                 .header {{
                     flex-direction: column;
@@ -1458,7 +1458,7 @@ def admin_dashboard():
                     <a href="/admin/logout" class="logout">🚪 Logout</a>
                 </div>
             </div>
-            
+
             <div class="price-card">
                 <h2>💰 Current Program Fee</h2>
                 <div class="current-price">
@@ -1469,10 +1469,10 @@ def admin_dashboard():
                     <code>PROGRAM_FEE={current_fee}</code> in your .env file
                 </div>
             </div>
-            
+
             <div class="members-section">
                 <h2>📋 Recent Members ({len(members)} shown)</h2>
-                
+
                 <table>
                     <thead>
                         <tr>
@@ -1514,5 +1514,5 @@ if __name__ == '__main__':
     print(f"📊 Google Sheets: {'✅ Connected' if google_sheet else '❌ Not Connected'}")
     print(f"📱 WhatsApp Group: {PROGRAM_LINK}")
     print("="*60 + "\n")
-    
+
     app.run(debug=True, host='0.0.0.0', port=5000)
