@@ -6,25 +6,25 @@ All imports included - No undefined variables!
 # ============================================
 # ALL REQUIRED IMPORTS - EVERYTHING IS HERE!
 # ============================================
+from flask import Flask, render_template, request, redirect, session, url_for, jsonify, make_response
+from intasend import APIService
 import os
+from dotenv import load_dotenv
+from datetime import datetime
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 import logging
 import uuid
 import functools
 import traceback
 import sys
 import re
-from datetime import datetime
-from flask import Flask, request, redirect, session, url_for
-from intasend import APIService
-from dotenv import load_dotenv
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 
-# Load environment variables
-ENV_PATH = '.env'
-load_dotenv(ENV_PATH)
-print(f"Loading .env from: {ENV_PATH}", file=sys.stderr)
-print(f"File exists: {os.path.exists(ENV_PATH)}", file=sys.stderr)
+# Load environment variables with ABSOLUTE PATH
+env_path = '/home/drocha/gym-website/.env'
+load_dotenv(env_path)
+print(f"Loading .env from: {env_path}", file=sys.stderr)
+print(f"File exists: {os.path.exists(env_path)}", file=sys.stderr)
 print(f"INTASEND_PUBLISHABLE_KEY exists: {bool(os.getenv('INTASEND_PUBLISHABLE_KEY'))}", file=sys.stderr)
 print(f"INTASEND_SECRET_TOKEN exists: {bool(os.getenv('INTASEND_SECRET_TOKEN'))}", file=sys.stderr)
 
@@ -64,18 +64,18 @@ TEST_MODE = os.getenv('INTASEND_TEST_MODE', 'False').lower() == 'true'
 
 # Initialize IntaSend
 try:
-    INTASEND_SERVICE = APIService(
+    service = APIService(
         token=SECRET_TOKEN,
         publishable_key=PUBLISHABLE_KEY,
         test=TEST_MODE
     )
     logger.info("✅ IntaSend initialized")
-except Exception as e:  # pylint: disable=broad-exception-caught
-    logger.error("❌ IntaSend failed: %s", e)
-    INTASEND_SERVICE = None
+except Exception as e:
+    logger.error(f"❌ IntaSend failed: {e}")
+    service = None
 
 # Program details - Read from .env
-PROGRAM_FEE = int(os.getenv('PROGRAM_FEE', '1500'))
+PROGRAM_FEE = int(os.getenv('PROGRAM_FEE', 1500))
 PROGRAM_NAME = os.getenv('PROGRAM_NAME', 'The Tkay Challenge')
 PROGRAM_LINK = os.getenv('PROGRAM_LINK', 'https://chat.whatsapp.com/CsNACCVEIyOHgglAxmW9XN')
 CURRENCY = os.getenv('CURRENCY', 'KES')
@@ -96,11 +96,11 @@ def setup_google_sheets():
         ]
 
         # Use ABSOLUTE path to the file
-        credentials_path = 'gym-credentials.json'
+        credentials_path = '/home/drocha/gym-website/gym-credentials.json'
 
         if not os.path.exists(credentials_path):
-            logger.warning("⚠️  gym-credentials.json not found at %s", credentials_path)
-            logger.warning("Current directory: %s", os.getcwd())
+            logger.warning(f"⚠️  gym-credentials.json not found at {credentials_path}")
+            logger.warning(f"Current directory: {os.getcwd()}")
             logger.warning("Google Sheets will be disabled")
             return None
 
@@ -125,11 +125,11 @@ def setup_google_sheets():
             sheet.append_row(expected_headers)
             logger.info("✅ Added headers to Google Sheet")
 
-        logger.info("✅ Connected to Google Sheet: %s", sheet_name)
+        logger.info(f"✅ Connected to Google Sheet: {sheet_name}")
         return sheet
 
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        logger.error("❌ Google Sheets error: %s", e)
+    except Exception as e:
+        logger.error(f"❌ Google Sheets error: {e}")
         return None
 
 google_sheet = setup_google_sheets()
@@ -156,11 +156,11 @@ def save_member_to_sheets(member_data, invoice_id, status):
         ]
 
         google_sheet.append_row(row)
-        logger.info("✅ Member saved: %s", member_data.get('email'))
+        logger.info(f"✅ Member saved: {member_data.get('email')}")
         return True
 
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        logger.error("❌ Sheets save error: %s", e)
+    except Exception as e:
+        logger.error(f"❌ Sheets save error: {e}")
         return False
 
 # ============================================
@@ -231,7 +231,6 @@ def inject_disable_f12():
 # ADMIN LOGIN DECORATOR
 # ============================================
 def admin_required(f):
-    """Decorator to require admin login."""
     @functools.wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('admin_logged_in'):
@@ -563,7 +562,7 @@ def index():
         <script>
             // Form validation
             function normalizePhone(rawPhone) {{
-                const digitsOnly = rawPhone.replace(/\\D/g, '');
+                const digitsOnly = rawPhone.replace(/\D/g, '');
 
                 if (digitsOnly.startsWith('254') && digitsOnly.length === 12) {{
                     return digitsOnly;
@@ -582,7 +581,7 @@ def index():
                 const payButton = document.getElementById('payButton');
                 const loading = document.getElementById('loading');
 
-                if (!/^254\\d{{9}}$/.test(phone)) {{
+                if (!/^254\d{{9}}$/.test(phone)) {{
                     alert('❌ Use format: 2547XXXXXXXX');
                     return false;
                 }}
@@ -657,21 +656,21 @@ def register():
         session['member'] = member
         session['registration_id'] = registration_id
 
-        if not INTASEND_SERVICE:
+        if not service:
             logger.error("Payment service unavailable")
             return "Payment service unavailable. Please try again later."
 
-        logger.info("Initiating payment for %s", member['phone'])
+        logger.info(f"Initiating payment for {member['phone']}")
 
         # IntaSend STK Push
-        response = INTASEND_SERVICE.collect.mpesa_stk_push(
+        response = service.collect.mpesa_stk_push(
             phone_number=member['phone'],
             email=member['email'],
             amount=member['amount'],
             narrative=f"{PROGRAM_NAME} - {member['name']}"
         )
 
-        logger.info("IntaSend response: %s", response)
+        logger.info(f"IntaSend response: {response}")
 
         # Extract invoice ID from response
         invoice_id = None
@@ -685,19 +684,19 @@ def register():
 
         if invoice_id:
             session['invoice_id'] = invoice_id
-            logger.info("✅ Invoice ID: %s", invoice_id)
+            logger.info(f"✅ Invoice ID: {invoice_id}")
 
             # Save to Google Sheets - PENDING
             save_member_to_sheets(member, invoice_id, 'PENDING')
 
             # Redirect to processing page with invoice_id in URL
             return redirect(url_for('payment_processing', invoice_id=invoice_id))
+        else:
+            logger.error(f"Could not extract invoice_id from response: {response}")
+            return "Payment initiated but couldn't get invoice ID. Check IntaSend dashboard."
 
-        logger.error("Could not extract invoice_id from response: %s", response)
-        return "Payment initiated but couldn't get invoice ID. Check IntaSend dashboard."
-
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        logger.error("Registration error: %s", str(e))
+    except Exception as e:
+        logger.error(f"Registration error: {str(e)}")
         traceback.print_exc()
         return f"Error: {str(e)}"
 
@@ -906,21 +905,21 @@ def check_status(invoice_id):
         return redirect('/')
 
     try:
-        logger.info("Checking status for invoice: %s", invoice_id)
+        logger.info(f"Checking status for invoice: {invoice_id}")
 
         # Get payment status from IntaSend
-        status = INTASEND_SERVICE.collect.status(invoice_id=invoice_id)
-        logger.info("Status check response: %s", status)
+        status = service.collect.status(invoice_id=invoice_id)
+        logger.info(f"Status check response: {status}")
 
         # Check different possible status fields
         payment_state = None
         if isinstance(status, dict):
             payment_state = status.get('state') or status.get('status') or status.get('invoice', {}).get('state')
 
-        logger.info("Payment state: %s", payment_state)
+        logger.info(f"Payment state: {payment_state}")
 
         # If payment is complete
-        if payment_state in ('COMPLETE', 'completed', 'success'):
+        if payment_state == 'COMPLETE' or payment_state == 'completed' or payment_state == 'success':
             member = session.get('member', {})
 
             # Update Google Sheets
@@ -931,12 +930,12 @@ def check_status(invoice_id):
             session.pop('invoice_id', None)
             session.pop('registration_id', None)
 
-            logger.info("✅ Payment complete for invoice %s", invoice_id)
+            logger.info(f"✅ Payment complete for invoice {invoice_id}")
             return redirect(url_for('success'))
 
         # If payment failed
-        if payment_state in ('FAILED', 'failed'):
-            logger.warning("❌ Payment failed for invoice %s", invoice_id)
+        elif payment_state == 'FAILED' or payment_state == 'failed':
+            logger.warning(f"❌ Payment failed for invoice {invoice_id}")
             return '''
             <div style="text-align: center; padding: 50px; font-family: Arial;">
                 <h2 style="color: #f44336;">Payment Failed</h2>
@@ -946,11 +945,12 @@ def check_status(invoice_id):
             '''
 
         # Still pending - redirect back to processing page
-        logger.info("⏳ Payment still pending for invoice %s", invoice_id)
-        return redirect(url_for('payment_processing', invoice_id=invoice_id))
+        else:
+            logger.info(f"⏳ Payment still pending for invoice {invoice_id}")
+            return redirect(url_for('payment_processing', invoice_id=invoice_id))
 
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        logger.error("Status check error: %s", e)
+    except Exception as e:
+        logger.error(f"Status check error: {e}")
         traceback.print_exc()
         # If there's an error, redirect back to processing page
         return redirect(url_for('payment_processing', invoice_id=invoice_id))
@@ -1153,8 +1153,8 @@ def admin_login():
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['admin_logged_in'] = True
             return redirect(url_for('admin_dashboard'))
-
-        error = 'Invalid credentials'
+        else:
+            error = 'Invalid credentials'
 
     return f'''
     <!DOCTYPE html>
@@ -1295,19 +1295,8 @@ def admin_dashboard():
             records = google_sheet.get_all_records()
             members = records[-20:] if len(records) > 20 else records
             members.reverse()  # Newest first
-        except Exception:  # pylint: disable=broad-exception-caught
+        except:
             members = []
-
-    members_html = (''.join([f'''
-                        <tr>
-                            <td>{m.get('Timestamp', '')}</td>
-                            <td>{m.get('Name', '')}</td>
-                            <td>{m.get('Email', '')}</td>
-                            <td>{m.get('Phone', '')}</td>
-                            <td>KES {m.get('Amount (KES)', '')}</td>
-                            <td class="status-{m.get('Status', '').lower()}">{m.get('Status', '')}</td>
-                        </tr>
-                        ''' for m in members]) if members else '<tr><td colspan="6" style="text-align: center;">No members yet</td></tr>')
 
     return f'''
     <!DOCTYPE html>
@@ -1485,7 +1474,16 @@ def admin_dashboard():
                         </tr>
                     </thead>
                     <tbody>
-                        {members_html}
+                        {''.join([f'''
+                        <tr>
+                            <td>{m.get('Timestamp', '')}</td>
+                            <td>{m.get('Name', '')}</td>
+                            <td>{m.get('Email', '')}</td>
+                            <td>{m.get('Phone', '')}</td>
+                            <td>KES {m.get('Amount (KES)', '')}</td>
+                            <td class="status-{m.get('Status', '').lower()}">{m.get('Status', '')}</td>
+                        </tr>
+                        ''' for m in members]) if members else '<tr><td colspan="6" style="text-align: center;">No members yet</td></tr>'}
                     </tbody>
                 </table>
             </div>
@@ -1507,10 +1505,10 @@ if __name__ == '__main__':
     print("\n" + "="*60)
     print(f"🏋️  {PROGRAM_NAME} WEBSITE")
     print("="*60)
-    print("📍 URL: http://127.0.0.1:5000")
+    print(f"📍 URL: http://127.0.0.1:5000")
     print(f"💰 Program Fee: KES {PROGRAM_FEE}")
     print(f"📱 Mode: {'TEST' if TEST_MODE else 'LIVE - REAL MONEY!'}")
-    print(f"🔑 IntaSend: {'Connected' if INTASEND_SERVICE else 'NOT CONNECTED'}")
+    print(f"🔑 IntaSend: {'Connected' if service else 'NOT CONNECTED'}")
     print(f"📊 Google Sheets: {'✅ Connected' if google_sheet else '❌ Not Connected'}")
     print(f"📱 WhatsApp Group: {PROGRAM_LINK}")
     print("="*60 + "\n")

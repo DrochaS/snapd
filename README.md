@@ -30,7 +30,6 @@ Welcome to the official repository for **The Tkay Challenge** website! This is a
 *   **Payments**: IntaSend SDK
 *   **Database**: Google Sheets API (via `gspread`)
 *   **Environment**: `python-dotenv` for secure configuration
-*   **Linter**: Pylint (10/10 compliance)
 
 ## 📋 Prerequisites
 
@@ -71,13 +70,6 @@ Start the development server:
 python app.py
 ```
 The application will be available at `http://127.0.0.1:5000`.
-
-## 🧪 Development & Quality
-
-This project maintains high code quality standards. You can run the linter using:
-```bash
-pylint --max-line-length=150 --disable=C0302 app.py
-```
 
 ## 📄 License
 [Include license info here if applicable]
