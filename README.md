@@ -118,22 +118,24 @@ http://127.0.0.1:5000
 - The `after_request` hook adds security response headers.
 
 ## Screenshots
-Below is a clean placeholder layout you can replace with real screenshots later.
+Visual overview of the application interface.
 
 ### 1. Home Page
-[![Home Page](https://via.placeholder.com/1200x700?text=Home+Page)](https://via.placeholder.com/1200x700?text=Home+Page)
+![Home Page](assets/screenshots/home.png)
 
 ### 2. Registration Form
-[![Registration Form](https://via.placeholder.com/1200x700?text=Registration+Form)](https://via.placeholder.com/1200x700?text=Registration+Form)
+![Registration Form](assets/screenshots/registration_filled.png)
 
-### 3. Payment Processing Page
-[![Payment Processing](https://via.placeholder.com/1200x700?text=Payment+Processing)](https://via.placeholder.com/1200x700?text=Payment+Processing)
+### 3. Admin Login
+![Admin Login](assets/screenshots/admin_login.png)
 
 ### 4. Admin Dashboard
-[![Admin Dashboard](https://via.placeholder.com/1200x700?text=Admin+Dashboard)](https://via.placeholder.com/1200x700?text=Admin+Dashboard)
+![Admin Dashboard](assets/screenshots/admin_dashboard.png)
 
 ## Future Improvements
-- Improve payment error handling
-- Split the application into multiple modules for maintainability
-- Add automated tests
-- Expand admin reporting features
+- **Modular Architecture**: Refactor `app.py` into multiple modules (e.g., blueprints for admin, registration, and payments) to improve maintainability and scalability.
+- **User Profile Management**: Allow registered members to log in, view their registration status, and update their personal details.
+- **Notifications**: Integrate email or SMS notifications (using services like SendGrid or Twilio) to confirm registrations and payment success.
+- **Automated Testing**: Implement a comprehensive test suite including unit tests for business logic and integration tests for the registration/payment flow.
+- **Enhanced Admin Analytics**: Expand the admin dashboard with data visualization (charts/graphs) to track registration trends and payment metrics.
+- **Improved Error Handling**: Add more robust error handling and logging, especially for external API integrations (IntaSend and Google Sheets).
